@@ -1,21 +1,38 @@
 %% Data
 load('./data/Helmstaedter2013/Helmstaedter_etal_Nature_2013_e2006_TrainingData_all.mat')
 
-%% Create features
+%% Create features and labels
 filters = getFilters([0 1 2 4]);
-for i = 1%:length(im)
-    [x1, y1, z1] = ind2sub(size(segTrue{i}),find(segTrue{i}, 1, 'first'));
-    [x2, y2, z2] = ind2sub(size(segTrue{i}),find(segTrue{i}, 1, 'last'));
-    
+maxFilterSize = arrayfun(@(d) max(cellfun(@(x) size(x,d), filters)), 1:3);
+requiredMargin = (maxFilterSize-1)/2;
+for i = 1:length(im)
+    disp(['Filtering image ' int2str(i)])
     img = im{i};
-    features = [];
-    parfor j = 1:length(filters)
-        uncropped = convn(img, filters{j}, 'same')
-        features(:,:,:,j) = uncropped(x1:x2-1, y1:y2-2, z1:z2-1)
-        disp(['finished filter #' int2str(j)])
-    end
     
-    gold = getGold(segTrue{i}(x1:x2, y1:y2, z1:z2));
-
+    [xs, ys, zs] = ind2sub(size(segTrue{i}),find(segTrue{i}));
+    iMin = max([min([xs ys zs]); floor(requiredMargin)+1]);
+    iMax = min([max([xs ys zs]); size(img)-ceil(requiredMargin)+1]); % +1 because of affinity graph is 1px smaller
+    
+    features = zeros([iMax-iMin length(filters)]);
+    
+    tic;
+    parfor j = 1:length(filters)
+        margin = (size(filters{j})-1)/2;
+        if(length(margin)<3); margin(3)=0; end
+        cMin = iMin - floor(margin);
+        cMax = iMax + ceil(margin) - 1; % -1 because of affinity graph is 1px smaller
+        
+        semicropped = img(cMin(1):cMax(1), cMin(2):cMax(2), cMin(3):cMax(3));
+        features(:,:,:,j) = convn(semicropped, filters{j}, 'valid');
+        disp(['filter #' int2str(j)]);
+    end
+    toc
+    
+    gold = getGold(segTrue{i}(iMin(1):iMax(1), iMin(2):iMax(2), iMin(3):iMax(3)));
+    
+    disp('Saving...')
+    tic
     save(['./data/Helmstaedter2013/features/im' int2str(i)], 'features', 'gold');
+    toc
+    disp(' ')
 end
