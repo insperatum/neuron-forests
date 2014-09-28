@@ -1,8 +1,7 @@
 load('data/Helmstaedter2013/features/im1.mat')
 
-p = 0.1; % percent bagged
-pTrain = 0.1; % percent to use as training data
-pTest = 0.1; % percent to use as test data
+pTrain = 0.1; % fraction to use as training data
+pTest = 0.1; % fraction to use as test data
 nTrees = 50;
 
 %%
