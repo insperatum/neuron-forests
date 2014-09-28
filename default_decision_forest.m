@@ -47,4 +47,8 @@ disp('Error Rates:')
 fprintf('%.2f%%\n', err*100)
 
 %%
-%save('code/neuron-forests/Forest.mat', 'Forest')
+disp('Saving model')
+tic
+Model = Forest.compact;
+save('code/neuron-forests/Model.mat', 'Model');
+toc
