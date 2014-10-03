@@ -29,6 +29,25 @@ cPred = flip_aff(connectedComponents(flip_aff(affinity_score > threshold)));
 cTarget = flip_aff(connectedComponents(flip_aff(affinity)));
 BrowseComponents('iicc', features(:,:,:,1), vis, cPred, cTarget);
 
+
+
+%%
+[tp, fp] = roc(affinity(:), affinity_score(:));
+plot(fp, tp)
+xlabel('False positive rate');
+ylabel('True positive rate');
+title('ROC')
+
+%%
+thresholds = 0:0.005:0.995;
+randErrors = arrayfun( @(t) randErrorN2( ...
+        flip_aff(connectedComponents(flip_aff(affinity_score > t))) + 1, ...
+        flip_aff(connectedComponents(flip_aff(affinity))) + 1), ...
+    thresholds);
+plot(thresholds, randErrors);
+xlabel('Affinity Threshold');
+ylabel('Rand Error');
+
 %%
 %thresholds = 0.4:0.02:0.6;
 %[thresholds; arrayfun(@(t) (sum(aff1_target(:) == (aff1_score(:) > t))) / length(aff1_target(:)), thresholds)]
