@@ -1,10 +1,9 @@
 import numpy as np
-def make(X, Y):
-
+def train(Xfeatures, Y):
 	minEntropy = None
 	for i in range(0, 100):
-		f = np.random.randint(X.shape[1])
-		F = X[:, f]
+		f = np.random.randint(2)
+		F = X[f]()
 		t = np.random.choice(F)
 		a = F < t
 		e = entropy(Y[a]) + entropy(Y[~a])
@@ -13,7 +12,7 @@ def make(X, Y):
 			feature = f
 			threshold = t
 			split = [Y[a], Y[~a]]
-	
+
 	print("entropy: ", minEntropy)
 	print("feature: ", feature)
 	print("threshold: ", threshold)
@@ -25,6 +24,5 @@ def entropy(list):
 		return 0
 	else:
 		p = np.bincount(list) / float(list.size)
-		def elemEntropy(p): return 0 if p==0 else -p * np.log(p)
-		vfunc = np.vectorize(elemEntropy)
+		vfunc = np.vectorize(lambda p: 0 if p==0 else -p * np.log(p))
 		return np.sum(vfunc(p))
