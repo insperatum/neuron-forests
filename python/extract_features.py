@@ -48,7 +48,7 @@ makeFeatures(cat, "cat")
 
 print "Loading Helmstaedter2013 data"
 Helmstaedter2013 = io.loadmat("data/Helmstaedter_etal_Nature_2013_e2006_TrainingData_all.mat")
-for i in range(0,1):
+for i in range(0,2):
 	makeFeatures(Helmstaedter2013["im"][0, i], "im" + str(i+1))
 
 
