@@ -56,11 +56,10 @@ Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]
 # print "Complete."
 
 print "Training"
-n = 25
+n = 2
 df = forest(n)
 sample = np.random.randint(idxs.shape[1], size=100000)
 features = get_features_dict("features/im1")
-print "features: ", features.keys()
 df.train(features, idxs[:, sample], Y.flatten()[sample])
 
 print "Predicting"
@@ -71,3 +70,8 @@ idxs = np.array(list(np.ndindex(shape))).T
 pred = df.predict(features, idxs).reshape(shape)
 io.savemat("pred.mat", {'pred':pred})
 print "Complete."
+
+from mlabwrap import mlab
+seunglab = "/home/luke/Documents/masters/code/seunglab"
+mlab.path(mlab.path(), seunglab + "/vis")
+mlab.BrowseComponents('ii', im, pred)
