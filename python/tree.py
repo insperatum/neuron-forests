@@ -5,7 +5,7 @@ class tree:
 		print "{}%".format(percent)	
 		self.splitEntropy = None
 		for i in range(0, 5):
-			f = np.random.choice(range(0, len(features)))
+			f = np.random.choice(features.keys())
 			#print "feature: ", f.path
 			F = features[f](idxs)
 			for j in range(0, 10):
@@ -54,8 +54,6 @@ class tree:
 				r = self.right.predict(features, idxs[:, ~a], depth+1, percent + pow(2, -1-depth))
 			out[~a] = r
 		return out
-
-
 
 def entropy(list):
 	if(list.size == 0):

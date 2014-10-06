@@ -40,7 +40,7 @@ def makeFeatures(img, name):
 			# if(img.ndim == 2):
 			# 	filename = "{}/{}{}.png".format(folder, name, suffix)
 			# 	misc.imsave(filename, feature)
-			filename = "{}/{}{}.mat".format(folder, name, suffix)
+			filename = "{}/DoG{}.mat".format(folder, suffix)
 			io.savemat(filename, {"im": feature, "scale": scale})
 
 cat = np.mean(ndimage.imread("data/cat.jpg"), axis=2)

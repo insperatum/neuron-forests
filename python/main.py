@@ -4,27 +4,31 @@ from forest import forest
 import itertools
 from scipy import ndimage, io
 
-def get_feature_paths(at):
-	feature_paths = []
-	for f in os.listdir(at):
-		if(os.path.isdir(at + "/" + f)):
-			feature_paths = feature_paths + get_feature_paths(at + "/" + f)
-		else:
-			feature_paths = feature_paths + [at + "/" + f]
-	return feature_paths
-
 class feature:
-	def __init__(self, path): self.path = path
+	def __init__(self, root, path):
+		self.root = root
+		self.path = path
 	def __call__(self, idxs):
-		mat = io.loadmat(self.path)
+		mat = io.loadmat(self.root + "/" + self.path)
 		scale = mat["scale"][0,0]
 		im = mat["im"]
 		return im[(idxs[0]*scale).astype(int), (idxs[1]*scale).astype(int), (idxs[2]*scale).astype(int)]
 
-feature_paths = get_feature_paths("features/im1")
-features = np.vectorize(feature)(feature_paths)
-print "feature paths: ", feature_paths
-print ""
+def get_feature_paths(root, path = ""):
+	feature_paths = []
+	for f in os.listdir(root + "/" + path):
+		if(os.path.isdir(root + "/" + path + f)):
+			feature_paths = feature_paths + get_feature_paths(root, path + f + "/")
+		else:
+			feature_paths = feature_paths + [path + f]
+	return feature_paths
+
+def get_features_dict(root):
+	out = {}
+	for p in get_feature_paths(root):
+		out.update({p:feature(root, p)})
+	return out
+
 print "Loading Helmstaedter2013 data"
 Helmstaedter2013 = io.loadmat("data/Helmstaedter_etal_Nature_2013_e2006_TrainingData_all.mat")
 
@@ -55,11 +59,13 @@ print "Training"
 n = 25
 df = forest(n)
 sample = np.random.randint(idxs.shape[1], size=100000)
+features = get_features_dict("features/im1")
+print "features: ", features.keys()
 df.train(features, idxs[:, sample], Y.flatten()[sample])
 
 print "Predicting"
 im = Helmstaedter2013["im"][0, 1]
-features = np.vectorize(feature)(get_feature_paths("features/im2"))
+features = get_features_dict("features/im2")
 shape = im.shape
 idxs = np.array(list(np.ndindex(shape))).T
 pred = df.predict(features, idxs).reshape(shape)
