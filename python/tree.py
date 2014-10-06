@@ -39,21 +39,21 @@ class tree:
 			self.right = tree()
 			self.right.train(features, idxs[:, self.split[1]], self.YRight, depth+1, percent + pow(2, -1-depth))
 
-def predict(self, features, idxs, depth=0, percent=0):
-	print "{}%".format(percent)	
-	a = np.array(features[self.feature](idxs) < self.threshold)
-	out = np.empty(idxs[0].shape)
-	if any(a):
-		if self.left is None: l = np.sum(self.YLeft) / float(len(self.YLeft))
-		else: 
-			l = predict(self.left, features, idxs[:, a], depth+1, percent)
-		out[a] = l
-	if any(~a):
-		if self.right is None: r = np.sum(self.YRight) / float(len(self.YRight))
-		else: 
-			r = predict(self.right, features, idxs[:, ~a], depth+1, percent + pow(2, -1-depth))
-		out[~a] = r
-	return out
+	def predict(self, features, idxs, depth=0, percent=0):
+		print "{}%".format(percent)	
+		a = np.array(features[self.feature](idxs) < self.threshold)
+		out = np.empty(idxs[0].shape)
+		if any(a):
+			if self.left is None: l = np.sum(self.YLeft) / float(len(self.YLeft))
+			else: 
+				l = self.left.predict(features, idxs[:, a], depth+1, percent)
+			out[a] = l
+		if any(~a):
+			if self.right is None: r = np.sum(self.YRight) / float(len(self.YRight))
+			else: 
+				r = self.right.predict(features, idxs[:, ~a], depth+1, percent + pow(2, -1-depth))
+			out[~a] = r
+		return out
 
 
 

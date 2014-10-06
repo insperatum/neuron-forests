@@ -1,6 +1,6 @@
 import numpy as np
 import os
-import tree
+from forest import forest
 import itertools
 from scipy import ndimage, io
 
@@ -38,16 +38,30 @@ def offsetFunc(idx): return [idx[0]+minIdx[0], idx[1]+minIdx[1], idx[2]+minIdx[2
 idxs = np.array(list(itertools.imap(offsetFunc, np.ndindex(shape)))).T
 Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]!=0
 
+# print "Training"
+# dt = tree()
+# dt.train(features, idxs[:,1:100000], Y.flatten()[1:100000])
+
+# print "Predicting"
+# im = Helmstaedter2013["im"][0, 0]
+# features = np.vectorize(feature)(get_feature_paths("features/im1"))
+# shape = im.shape
+# idxs = np.array(list(np.ndindex(shape))).T
+# pred = dt.predict(features, idxs).reshape(shape)
+# io.savemat("pred.mat", {'pred':pred})
+# print "Complete."
+
 print "Training"
-tree = reload(tree)
-dt = tree.tree()
-dt.train(features, idxs[:,1:100000], Y.flatten()[1:100000])
+n = 25
+df = forest(n)
+sample = np.random.randint(idxs.shape[1], size=100000)
+df.train(features, idxs[:, sample], Y.flatten()[sample])
 
 print "Predicting"
-im = Helmstaedter2013["im"][0, 0]
-features = np.vectorize(feature)(get_feature_paths("features/im1"))
+im = Helmstaedter2013["im"][0, 1]
+features = np.vectorize(feature)(get_feature_paths("features/im2"))
 shape = im.shape
 idxs = np.array(list(np.ndindex(shape))).T
-pred = tree.predict(dt, features, idxs).reshape(shape)
+pred = df.predict(features, idxs).reshape(shape)
 io.savemat("pred.mat", {'pred':pred})
 print "Complete."
