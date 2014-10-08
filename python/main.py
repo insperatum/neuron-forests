@@ -58,7 +58,7 @@ Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]
 print "Training"
 n = 2
 df = forest(n)
-sample = np.random.randint(idxs.shape[1], size=100000)
+sample = np.random.randint(idxs.shape[1], size=500000)
 features = get_features_dict("features/im1")
 df.train(features, idxs[:, sample], Y.flatten()[sample])
 
