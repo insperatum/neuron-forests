@@ -15,8 +15,8 @@ class Feature:
 	def __init__(self, root, path):
 		self.root = root
 		self.path = path
-	def __call__(self, idxs):
+	def __call__(self, idxs, offset = (0,0,0)):
 		mat = io.loadmat(self.root + "/" + self.path)
 		scale = mat["scale"][0,0]
 		im = mat["im"]
-		return im[(idxs[0]*scale).astype(int), (idxs[1]*scale).astype(int), (idxs[2]*scale).astype(int)]
+		return im[((idxs[0] + offset[0])*scale).astype(int), ((idxs[1]+offset[1])*scale).astype(int), ((idxs[2] + offset[2])*scale).astype(int)]

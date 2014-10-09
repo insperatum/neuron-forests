@@ -14,23 +14,19 @@ class forest:
 
 	def predict(self, features, idxs):
 		ncpus = job_server.get_ncpus() - 1
+		job_server.set_ncpus(ncpus)
 		ntrees = len(self.trees)
 
-		jobTrees = map(
-			lambda i: map(
-				lambda j: self.trees[j],
-				range(ntrees * i / ncpus, ntrees * (i+1) / ncpus)),
-			range(0, ncpus))
+		jobs = map(
+			lambda tree: job_server.submit(tree.predict, (features, idxs), (), ("numpy as np", "util")),
+			self.trees
+			)
+		
+		pred = np.zeros(idxs[0].shape)
+		for i in range(0, len(jobs)):
+			pred += jobs[i]()
+			print "Predicted tree", str(i)
 
-		jobs = map(lambda trees: job_server.submit(self.sumPreds, (trees, idxs, features), (), ("numpy as np", "util")), jobTrees)
 		preds = map(lambda job: job(), jobs)
 		pred = np.sum(preds, 0)/ntrees
-		print pred.shape
-		return pred
-
-	def sumPreds(self, trees, idxs, features):
-		pred = np.zeros(idxs[0].shape)
-		for i in range(0, len(trees)):
-			print "Predicting tree", str(i)
-			pred += trees[i].predict(features, idxs)
 		return pred

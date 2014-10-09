@@ -47,10 +47,10 @@ Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]
 # print "Complete."
 
 print "Training"
-df = forest(nTrees = 5, minEntropy = 0.05, maxDepth = 5, nFeatures = 3, nThresholds = 10)
-sample = np.random.randint(idxs.shape[1], size=100000)
+df = forest(nTrees = 20, minEntropy = 0.05, maxDepth = 	5, nFeatures = 3, nThresholds = 10)
+#sample = np.random.randint(idxs.shape[1], size=100000)
 features = get_features_dict("features/im1")
-df.train(features, idxs[:, sample], Y.flatten()[sample])
+df.train(features, idxs, Y.flatten())
 
 print "Predicting"
 im = Helmstaedter2013["im"][0, 1]
