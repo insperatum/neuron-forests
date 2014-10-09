@@ -3,16 +3,7 @@ import os
 from forest import forest
 import itertools
 from scipy import ndimage, io
-
-class feature:
-	def __init__(self, root, path):
-		self.root = root
-		self.path = path
-	def __call__(self, idxs):
-		mat = io.loadmat(self.root + "/" + self.path)
-		scale = mat["scale"][0,0]
-		im = mat["im"]
-		return im[(idxs[0]*scale).astype(int), (idxs[1]*scale).astype(int), (idxs[2]*scale).astype(int)]
+import util
 
 def get_feature_paths(root, path = ""):
 	feature_paths = []
@@ -26,7 +17,7 @@ def get_feature_paths(root, path = ""):
 def get_features_dict(root):
 	out = {}
 	for p in get_feature_paths(root):
-		out.update({p:feature(root, p)})
+		out.update({p:util.Feature(root, p)})
 	return out
 
 print "Loading Helmstaedter2013 data"
@@ -56,9 +47,8 @@ Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]
 # print "Complete."
 
 print "Training"
-n = 2
-df = forest(n)
-sample = np.random.randint(idxs.shape[1], size=500000)
+df = forest(nTrees = 5, minEntropy = 0.05, maxDepth = 5, nFeatures = 3, nThresholds = 10)
+sample = np.random.randint(idxs.shape[1], size=100000)
 features = get_features_dict("features/im1")
 df.train(features, idxs[:, sample], Y.flatten()[sample])
 
