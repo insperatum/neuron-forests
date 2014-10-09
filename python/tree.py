@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import util
 import pp
 job_server = pp.Server()
@@ -20,7 +21,7 @@ class tree:
 		def tryFeature(f, F, Y, nThresholds):
 			best = None
 			for j in range(0, nThresholds):
-				t = np.random.choice(F)
+				t = random.choice(F)
 				a = F < t
 				l = Y[a]
 				r = Y[~a]
@@ -40,9 +41,9 @@ class tree:
 			return best
 
 		def makeJob():
-			f = np.random.choice(features.keys())
+			f = random.choice(features.keys())
 			F = features[f](idxs)
-			return job_server.submit(tryFeature, (f, F, Y, self.nThresholds), (entropy,), ("numpy as np", "util"))
+			return job_server.submit(tryFeature, (f, F, Y, self.nThresholds), (entropy,), ("numpy as np", "util", "random"))
 		jobs = map(lambda i: makeJob(), range(0, self.nFeatures))
 		splits = map(lambda job: job(), jobs)
 		self.split = min(splits, key=lambda s: s.entropy)

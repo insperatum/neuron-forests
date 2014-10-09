@@ -14,10 +14,14 @@ def get_feature_paths(root, path = ""):
 			feature_paths = feature_paths + [path + f]
 	return feature_paths
 
-def get_features_dict(root):
+def get_features_dict(root, maxOffset = 3):
 	out = {}
 	for p in get_feature_paths(root):
-		out.update({p:util.Feature(root, p)})
+		for o1 in range(-maxOffset, maxOffset+1):
+			for o2 in range(-maxOffset, maxOffset+1):
+				for o3 in range(-maxOffset, maxOffset+1):
+					offset = (o1, o2, o3)
+					out.update({(p, offset):util.Feature(root, p, offset)})
 	return out
 
 print "Loading Helmstaedter2013 data"
@@ -46,15 +50,18 @@ Y = segTrue[minIdx[0]:maxIdx[0]+1, minIdx[1]:maxIdx[1]+1, minIdx[2]:maxIdx[2]+1]
 # io.savemat("pred.mat", {'pred':pred})
 # print "Complete."
 
+maxOffset = 3
+
 print "Training"
-df = forest(nTrees = 20, minEntropy = 0.05, maxDepth = 	5, nFeatures = 3, nThresholds = 10)
-#sample = np.random.randint(idxs.shape[1], size=100000)
-features = get_features_dict("features/im1")
-df.train(features, idxs, Y.flatten())
+df = forest(nTrees = 3, minEntropy = 0.05, maxDepth = 	5, nFeatures = 10, nThresholds = 10)
+features = get_features_dict("features/im1", maxOffset = maxOffset)
+sample = np.random.randint(idxs.shape[1], size=100000)
+df.train(features, idxs[:, sample], Y.flatten()[sample])
+#df.train(features, idxs, Y.flatten())
 
 print "Predicting"
 im = Helmstaedter2013["im"][0, 1]
-features = get_features_dict("features/im2")
+features = get_features_dict("features/im2", maxOffset = maxOffset)
 shape = im.shape
 idxs = np.array(list(np.ndindex(shape))).T
 pred = df.predict(features, idxs).reshape(shape)
