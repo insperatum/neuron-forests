@@ -1,39 +1,41 @@
 import numpy as np
-from tree import tree
+from tree import Tree
 import pp
 import time
+
 job_server = pp.Server()
 
-class forest:
-	def __init__(self, nTrees, minEntropy, maxDepth, nFeatures, nThresholds):
-		self.trees = map(lambda x: tree(minEntropy, maxDepth, nFeatures, nThresholds), range(0,nTrees))
 
-	def train(self, features, idxs, Y):
-		outerTime = time.time()
-		for i in range(0, len(self.trees)):
-			print "Training tree", str(i)
-			innerTime = time.time()
-			self.trees[i].train(features, idxs, Y)
-			print("Tree took {} seconds".format(int(time.time() - innerTime)))
-		print("Training took {} seconds".format(int(time.time() - outerTime)))
+class Forest:
+    def __init__(self, nTrees, minEntropy, maxDepth, nFeatures, nThresholds):
+        self.trees = map(lambda x: Tree(minEntropy, maxDepth, nFeatures, nThresholds), range(0, nTrees))
 
-	def predict(self, features, idxs):
-		ncpus = job_server.get_ncpus() - 1
-		job_server.set_ncpus(ncpus)
-		ntrees = len(self.trees)
+    def train(self, features, idxs, Y):
+        outerTime = time.time()
+        for i in range(0, len(self.trees)):
+            print "Training tree", str(i)
+            innerTime = time.time()
+            self.trees[i].train(features, idxs, Y)
+            print("Tree took {} seconds".format(int(time.time() - innerTime)))
+        print("Training took {} seconds".format(int(time.time() - outerTime)))
 
-		jobs = map(
-			lambda tree: job_server.submit(tree.predict, (features, idxs), (), ("numpy as np", "util", "time")),
-			self.trees
-			)
-		
-		outerTime = time.time()
-		pred = np.zeros(idxs[0].shape)
-		for i in range(0, len(jobs)):
-			print "Predicting tree", str(i)
-			innerTime = time.time()
-			pred += jobs[i]()
-			print("Tree took {} seconds".format(int(time.time() - innerTime)))
-		pred = pred/ntrees
-		print("Predicting took {} seconds".format(int(time.time() - outerTime)))
-		return pred
+    def predict(self, features, idxs):
+        ncpus = job_server.get_ncpus() - 1
+        job_server.set_ncpus(ncpus)
+        ntrees = len(self.trees)
+
+        jobs = map(
+            lambda tree: job_server.submit(tree.predict, (features, idxs), (), ("numpy as np", "util", "time")),
+            self.trees
+        )
+
+        outerTime = time.time()
+        pred = np.zeros(idxs[0].shape)
+        for i in range(0, len(jobs)):
+            print "Predicting tree", str(i)
+            innerTime = time.time()
+            pred += jobs[i]()
+            print("Tree took {} seconds".format(int(time.time() - innerTime)))
+        pred /= ntrees
+        print("Predicting took {} seconds".format(int(time.time() - outerTime)))
+        return pred
