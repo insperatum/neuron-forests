@@ -1,10 +1,7 @@
-import itertools
-
-import numpy as np
-from scipy import ndimage, io
+import time
+import cPickle as pickle
 
 from Forest import *
-from util import *
 from features import *
 
 print "Loading Helmstaedter2013 data"
@@ -23,13 +20,13 @@ targets = get_target_affinities(segTrue, idxs)
 
 print "\n\nTRAINING\n--------"
 sample = True
-def stop_when(output): return len(output) < 100 or all(map(lambda p: p<0.01 or p>0.99, proportion(output)))
 params = ForestParameters(
-    n_trees=5,
+    n_trees=1,
     testing_par_trees=4,
     tree_params=TreeParameters(
-        max_depth=6,
-        stop_when=stop_when,
+        max_depth=5,
+        min_size=100,
+        min_proportion=0.01,
         n_node_features=20,
         n_node_thresholds=10,
         training_par_features=mp.cpu_count(),
@@ -43,6 +40,13 @@ if sample:
     forest.train(features, idxs[:, sample], targets[sample])
 else:
     forest.train(features, idxs, targets)
+
+print "\nSAVING\n------"
+path = "model/{}".format(time.strftime("%d-%m-%y"))
+if not os.path.exists(path): os.mkdir(path)
+name = "ntrees={} depth={} n={} time={}.pkl".format(
+    params.n_trees, params.tree_params.max_depth, len(idxs[0]), time.strftime("%H:%M:%S"))
+pickle.dump(forest, open(path + "/" + name, "wb"), -1)
 
 
 print "\n\nPREDICTING\n----------"

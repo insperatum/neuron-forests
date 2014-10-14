@@ -1,6 +1,6 @@
 import multiprocessing as mp
 from collections import deque, namedtuple
-from time import time
+import time
 
 import numpy as np
 import random
@@ -19,11 +19,11 @@ class Forest:
         self.trees = map(lambda x: Tree(params.tree_params), range(params.n_trees))
 
     def train(self, features, idxs, targets):
-        t = time()
+        t = time.time()
         map( #Can't par yet, because trees don't actually get modified
             train_tree,
             [(i, self.trees[i], features, idxs, targets) for i in range(len(self.trees))])
-        print("\nTraining took {} seconds".format(int(time() - t)))
+        print("\nTraining took {} seconds".format(int(time.time() - t)))
 
     def predict(self, features, idxs):
         s = par_sum(
@@ -36,9 +36,9 @@ class Forest:
 def train_tree(args):
     i, tree, features, idxs, targets = args
     print "\nTraining tree {}\n--------------".format(str(i))
-    t = time()
+    t = time.time()
     tree.train(features, idxs, targets)
-    print("Tree {} took {} seconds".format(i, int(time() - t)))
+    print("Tree {} took {} seconds".format(i, int(time.time() - t)))
 
 def predict_tree(args, features, idxs):
     i, tree = args

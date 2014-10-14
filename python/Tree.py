@@ -1,6 +1,5 @@
 import multiprocessing as mp
 from collections import deque, namedtuple
-from time import time
 
 from memory_profiler import profile
 import numpy as np
@@ -11,7 +10,7 @@ from util import *
 
 TreeParameters = namedtuple(
     'TreeParameters',
-    ['max_depth', 'stop_when', 'n_node_features', 'n_node_thresholds',
+    ['max_depth', 'min_size', 'min_proportion', 'n_node_features', 'n_node_thresholds',
      'training_par_thresholds', 'training_par_features'])
 Split = namedtuple(
     'Split',
@@ -42,10 +41,10 @@ class Tree:
             #     len(split.targets_right), map(lambda p: int(100*p), proportion(split.targets_right)))
 
             if node.depth < self.params.max_depth:
-                if ~self.params.stop_when(split.targets_left):
+                if ~stop_when(split.targets_left, self.params.min_size, self.params.min_proportion):
                     node.left = _TreeNode(self.params, features, node.idxs[:, split.cond], split.targets_left, node.depth + 1)
                     queue.append(node.left)
-                if ~self.params.stop_when(split.targets_right):
+                if ~stop_when(split.targets_right, self.params.min_size, self.params.min_proportion):
                     node.right = _TreeNode(self.params, features, node.idxs[:, ~split.cond], split.targets_right, node.depth + 1)
                     queue.append(node.right)
 
@@ -85,6 +84,9 @@ class _TreeNode:
     def make_split(self):
         split_features = [self.features[random.choice(self.features.keys())] for _ in range(self.params.n_node_features)]
         self.split = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
+
+def stop_when(output, min_size, min_proportion):
+    return len(output) < min_size or all(map(lambda p: p<min_proportion or p>1-min_proportion, proportion(output)))
 
 def score_split(split):
     return -split.entropy

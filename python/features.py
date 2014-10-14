@@ -1,5 +1,5 @@
 import os
-from time import time
+import time
 
 from scipy import io
 import numpy as np
@@ -15,7 +15,6 @@ class Feature:
         self.key = (self.path, self.offset)
 
     def __call__(self, idxs_unravelled):
-        start = time()
         mat = io.loadmat(self.root + "/" + self.path)
         scale = mat["scale"][0, 0]
         im = mat["im"]
