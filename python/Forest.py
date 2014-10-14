@@ -10,7 +10,7 @@ from util import *
 
 ForestParameters = namedtuple(
     'ForestParameters',
-    ['tree_params', 'n_trees', 'par_trees'])
+    ['tree_params', 'n_trees', 'testing_par_trees'])
 
 
 class Forest:
@@ -20,10 +20,17 @@ class Forest:
 
     def train(self, features, idxs, targets):
         t = time()
-        maybe_par_map(
+        map( #Can't par yet, because trees don't actually get modified
             train_tree,
-            [(i, self.trees[i], features, idxs, targets) for i in range(len(self.trees))], self.params.par_trees)
+            [(i, self.trees[i], features, idxs, targets) for i in range(len(self.trees))])
         print("\nTraining took {} seconds".format(int(time() - t)))
+
+    def predict(self, features, idxs):
+        return par_sum(
+            zip(range(len(self.trees)), self.trees),
+            self.params.testing_par_trees,
+            predict_tree,
+            (features, idxs))
 
 def train_tree(args):
     i, tree, features, idxs, targets = args
@@ -31,3 +38,8 @@ def train_tree(args):
     t = time()
     tree.train(features, idxs, targets)
     print("Tree {} took {} seconds".format(i, int(time() - t)))
+
+def predict_tree(args, features, idxs):
+    i, tree = args
+    print "Predicting tree {}".format(str(i))
+    return tree.predict(features, idxs)

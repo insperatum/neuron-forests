@@ -12,6 +12,7 @@ class Feature:
         self.root = root
         self.path = path
         self.offset = offset
+        self.key = (self.path, self.offset)
 
     def __call__(self, idxs_unravelled):
         start = time()
@@ -41,5 +42,6 @@ def get_features_dict(root, max_offset):
             for o2 in range(-max_offset, max_offset + 1):
                 for o3 in range(-max_offset, max_offset + 1):
                     offsets = (o1, o2, o3)
-                    out.update({(p, offsets): Feature(root, p, offsets)})
+                    f = Feature(root, p, offsets)
+                    out.update({f.key: f})
     return out
