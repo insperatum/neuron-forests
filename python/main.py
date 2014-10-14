@@ -21,17 +21,18 @@ targets = get_target_affinities(segTrue, idxs)
 
 print "\n\nTRAINING\n--------"
 path = "model/{}".format(time.strftime("%d-%m-%y %H:%M:%S"))
-sample = True
+sample = False
 params = ForestParameters(
     save_path=path,
-    n_trees=4,
-    training_par_trees=4,
+    n_trees=8,
+    training_par_trees=8,
     testing_par_trees=4,
     tree_params=TreeParameters(
         max_depth=6,
         min_size=100,
         min_proportion=0.01,
-        n_node_features=20,
+        n_node_feature_bases=5,
+        n_node_features_total=30,
         n_node_thresholds=10,
         training_par_features=1,
         training_par_thresholds=1))
@@ -44,14 +45,6 @@ if sample:
     forest.train(features, idxs[:, sample], targets[sample])
 else:
     forest.train(features, idxs, targets)
-
-print "\nSAVING\n------"
-path = "model/{}".format(time.strftime("%d-%m-%y"))
-if not os.path.exists(path): os.mkdir(path)
-name = "ntrees={} depth={} n={} time={}.pkl".format(
-    params.n_trees, params.tree_params.max_depth, len(idxs[0]), time.strftime("%H:%M:%S"))
-pickle.dump(forest, open(path + "/" + name, "wb"), -1)
-
 
 print "\n\nPREDICTING\n----------"
 im = Helmstaedter2013["im"][0, 1]

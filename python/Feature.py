@@ -14,22 +14,35 @@ class FeatureGenerator:
         self.max_offset = max_offset
         self.cached = None
 
+
     def from_key(self, key):
         path, offset = key
-        return Feature(FeatureBase(self.root, path), offset)
+        return self.gen_feature(path, offset)
+
+    def gen_feature(self, path, offset):
+        if self.cached is not None:
+            return Feature(self.cached(path), offset)
+        else:
+            return Feature(FeatureBase(self.root, path), offset)
 
     def random(self):
         path = random.choice(self.paths)
         o1 = random.randint(-self.max_offset, self.max_offset)
         o2 = random.randint(-self.max_offset, self.max_offset)
         o3 = random.randint(-self.max_offset, self.max_offset)
-        return Feature(FeatureBase(self.root, path), (o1, o2, o3))
+        return self.gen_feature(path, (o1, o2, o3))
 
     def subset(self, n_features):
-        return FeatureGenerator(self.root, [random.choice(self.paths) for _ in range(n_features)], self.max_offset)
+        gen = FeatureGenerator(self.root, np.random.permutation(self.paths)[:n_features], self.max_offset)
+        gen.cached = self.cached
+        return gen
 
     def cache(self):
-        self.cached = map(lambda p: CachedFeatureBase(FeatureBase(self.root, p)), self.paths)
+        if self.cached is None:
+            self.cached = {}
+            for p in self.paths:
+                self.cached.update({p:CachedFeatureBase(FeatureBase(self.root, p))})
+        return self
 
     def clear_cache(self):
         self.cached = None

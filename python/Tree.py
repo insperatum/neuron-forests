@@ -9,7 +9,7 @@ from util import *
 
 TreeParameters = namedtuple(
     'TreeParameters',
-    ['max_depth', 'min_size', 'min_proportion', 'n_node_features', 'n_node_thresholds',
+    ['max_depth', 'min_size', 'min_proportion', 'n_node_feature_bases', 'n_node_features_total', 'n_node_thresholds',
      'training_par_thresholds', 'training_par_features'])
 Split = namedtuple(
     'Split',
@@ -38,14 +38,14 @@ class Tree:
                     print "Depth {} took {:.2f}s".format(current_depth, time.time() - start_time)
                     start_time = time.time()
                 current_depth = node.depth
-                # feature_cache = cached_feature_subset(features, self.params.n_node_features)
+                feature_cache = features.subset(self.params.n_node_feature_bases)
             # print "Depth {},\tSplit ({}) {}:{} ({})".format(
             #     node.depth,
             #     map(lambda p: int(100*p), proportion(split.targets_left)), len(split.targets_left),
             #     len(split.targets_right), map(lambda p: int(100*p), proportion(split.targets_right)))
 
 
-            node.make_split(features)
+            node.make_split(feature_cache)
             split = node.split
 
             if node.depth < self.params.max_depth:
@@ -92,7 +92,8 @@ class _TreeNode:
         self.left, self.right = None, None
 
     def make_split(self, features):
-        split_features = [features.random() for _ in range(self.params.n_node_features)]
+        gen = features.subset(self.params.n_node_feature_bases)
+        split_features = [gen.random() for _ in range(self.params.n_node_features_total)]
         self.split = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
 
 def stop_when(output, min_size, min_proportion):
