@@ -1,3 +1,4 @@
+import resource
 import multiprocessing as mp
 import numpy as np
 
@@ -37,7 +38,10 @@ def proportion(lst):
     return [p1, p2, p3]
 
 
-# Parallel shit
+# Parallel/Performance shit
+def limit_memory(megs):
+    resource.setrlimit(resource.RLIMIT_AS, (megs * 1048576L, -1L))
+
 def chunk(lst, num_chunks):
     chunks = [lst[i*len(lst)/num_chunks:(i+1)*len(lst)/num_chunks] for i in range(0, num_chunks)]
     return filter(lambda x: x != [], chunks)
@@ -59,10 +63,16 @@ def maybe_par_map(f, dom, pool_size):
         mapped = map(f, dom)
     else:
         pool = mp.Pool(pool_size)
-        mapped = pool.map(f, dom)
+        megs = 7000
+        mapped = pool.map(run_with_limited_memory, [(megs, f, d) for d in dom])
         pool.close()
         pool.join()
     return mapped
+
+def run_with_limited_memory(args):
+    megs, f, dom = args
+    limit_memory(megs)
+    return f(dom)
 
 def _par_max_inner(args):
     arr, func, func_args, max_key = args

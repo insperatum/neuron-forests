@@ -1,12 +1,11 @@
 import multiprocessing as mp
 from collections import deque, namedtuple
+import time
 
-from memory_profiler import profile
 import numpy as np
 import random
 
 from util import *
-
 
 TreeParameters = namedtuple(
     'TreeParameters',
@@ -17,36 +16,47 @@ Split = namedtuple(
     ['feature_key', 'threshold', 'entropy', 'cond', 'targets_left', 'targets_right', 'proportion_left', 'proportion_right'])
 
 
+feature_cache = None
+
 class Tree:
     def __init__(self, params):
         self.params = params
         self.root = None
 
     def train(self, features, idxs, targets):
-        self.root = _TreeNode(self.params, features, idxs, targets)
+        self.root = _TreeNode(self.params, idxs, targets)
         queue = deque([self.root])
 
         # print "Initial Proportion {}".format(map(lambda p: int(100*p), proportion(targets)))
         current_depth = 0
+        feature_cache = None
+        start_time = time.time()
         while len(queue)>0:
             node = queue.popleft()
-            node.make_split()
-            split = node.split
-            if node.depth>current_depth:
+            if node.depth > current_depth:
+                if current_depth>0:
+                    print "Depth {} took {:.2f}s".format(current_depth, time.time() - start_time)
+                    start_time = time.time()
                 current_depth = node.depth
-                print "Depth {}".format(current_depth)
+                # feature_cache = cached_feature_subset(features, self.params.n_node_features)
             # print "Depth {},\tSplit ({}) {}:{} ({})".format(
             #     node.depth,
             #     map(lambda p: int(100*p), proportion(split.targets_left)), len(split.targets_left),
             #     len(split.targets_right), map(lambda p: int(100*p), proportion(split.targets_right)))
 
+
+            node.make_split(features)
+            split = node.split
+
             if node.depth < self.params.max_depth:
                 if ~stop_when(split.targets_left, self.params.min_size, self.params.min_proportion):
-                    node.left = _TreeNode(self.params, features, node.idxs[:, split.cond], split.targets_left, node.depth + 1)
+                    node.left = _TreeNode(self.params, node.idxs[:, split.cond], split.targets_left, node.depth + 1)
                     queue.append(node.left)
                 if ~stop_when(split.targets_right, self.params.min_size, self.params.min_proportion):
-                    node.right = _TreeNode(self.params, features, node.idxs[:, ~split.cond], split.targets_right, node.depth + 1)
+                    node.right = _TreeNode(self.params, node.idxs[:, ~split.cond], split.targets_right, node.depth + 1)
                     queue.append(node.right)
+
+        print "Depth {} took {:.2f}s".format(current_depth, time.time() - start_time)
 
     def predict(self, features, idxs):
         queue = deque([(self.root, np.arange(len(idxs[0])))])
@@ -54,7 +64,8 @@ class Tree:
 
         while len(queue)>0:
             node, node_idxs_idxs = queue.popleft()
-            feature_vals = features[node.split.feature_key](idxs[:, node_idxs_idxs])
+            feature = features.from_key(node.split.feature_key)
+            feature_vals = feature(idxs[:, node_idxs_idxs])
             cond = feature_vals < node.split.threshold
             left_idxs_idxs = node_idxs_idxs[cond]
             right_idxs_idxs = node_idxs_idxs[~cond]
@@ -72,17 +83,16 @@ class Tree:
         return pred
 
 class _TreeNode:
-    def __init__(self, params, features, idxs, targets, depth=1):
+    def __init__(self, params, idxs, targets, depth=1):
         self.params = params
-        self.features = features
         self.idxs = idxs
         self.targets = targets
         self.depth = depth
         self.split = None
         self.left, self.right = None, None
 
-    def make_split(self):
-        split_features = [self.features[random.choice(self.features.keys())] for _ in range(self.params.n_node_features)]
+    def make_split(self, features):
+        split_features = [features.random() for _ in range(self.params.n_node_features)]
         self.split = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
 
 def stop_when(output, min_size, min_proportion):
