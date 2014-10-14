@@ -4,17 +4,40 @@ import numpy as np
 def get_steps(arr):
     return tuple(np.append(np.cumprod(np.array(arr.shape)[1:][::-1])[::-1], 1))
 
+def get_image_idxs(im, max_idx, min_idx=(0,0,0)):
+    xs, ys, zs = np.ix_(range(min_idx[0], max_idx[0] + 1), range(min_idx[1], max_idx[1] + 1),
+                    range(min_idx[2], max_idx[2] + 1))
+    steps = get_steps(im)
+    return np.array(np.unravel_index((xs * steps[0] + ys * steps[1] + zs * steps[2]).flatten(), im.shape))
+
+def get_target_affinities(seg, idxs):
+    aff = np.empty((len(idxs[0]), 3), dtype=bool)
+    aff[:, 0] = np.logical_and(seg[tuple(idxs)] != 0, seg[tuple(idxs)] == seg[tuple(idxs + [[1], [0], [0]])])
+    aff[:, 1] = np.logical_and(seg[tuple(idxs)] != 0, seg[tuple(idxs)] == seg[tuple(idxs + [[0], [1], [0]])])
+    aff[:, 2] = np.logical_and(seg[tuple(idxs)] != 0, seg[tuple(idxs)] == seg[tuple(idxs + [[0], [0], [1]])])
+    return aff
+
 def entropy(lst):
     if lst.size == 0:
         return 0
     else:
-        p = np.bincount(lst) / float(lst.size)
+        b1 = np.bincount(lst[:, 0]) / float(lst[:, 0].size)
+        b2 = np.bincount(lst[:, 1]) / float(lst[:, 1].size)
+        b3 = np.bincount(lst[:, 2]) / float(lst[:, 2].size)
         vfunc = np.vectorize(lambda x: 0 if x == 0 else -x * np.log(x))
-        return np.sum(vfunc(p))
+        return np.sum(vfunc(b1)) + np.sum(vfunc(b2)) + np.sum(vfunc(b3))
 
 def proportion(lst):
-    return 0 if lst.size==0 else float(np.count_nonzero(lst)) / lst.size
+    if lst.size == 0:
+        return [0, 0, 0]
+    else:
+        p1 = np.count_nonzero(lst[:, 0]) / float(lst[:, 0].size)
+        p2 = np.count_nonzero(lst[:, 1]) / float(lst[:, 1].size)
+        p3 = np.count_nonzero(lst[:, 2]) / float(lst[:, 2].size)
+    return [p1, p2, p3]
 
+
+# Parallel shit
 def chunk(lst, num_chunks):
     chunks = [lst[i*len(lst)/num_chunks:(i+1)*len(lst)/num_chunks] for i in range(0, num_chunks)]
     return filter(lambda x: x != [], chunks)

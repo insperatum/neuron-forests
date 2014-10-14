@@ -26,11 +26,12 @@ class Forest:
         print("\nTraining took {} seconds".format(int(time() - t)))
 
     def predict(self, features, idxs):
-        return par_sum(
+        s = par_sum(
             zip(range(len(self.trees)), self.trees),
             self.params.testing_par_trees,
             predict_tree,
             (features, idxs))
+        return s / len(self.trees)
 
 def train_tree(args):
     i, tree, features, idxs, targets = args

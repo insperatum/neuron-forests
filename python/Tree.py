@@ -11,7 +11,7 @@ from util import *
 
 TreeParameters = namedtuple(
     'TreeParameters',
-    ['max_depth', 'min_size', 'min_proportion', 'n_node_features', 'n_node_thresholds',
+    ['max_depth', 'stop_when', 'n_node_features', 'n_node_thresholds',
      'training_par_thresholds', 'training_par_features'])
 Split = namedtuple(
     'Split',
@@ -27,27 +27,31 @@ class Tree:
         self.root = _TreeNode(self.params, features, idxs, targets)
         queue = deque([self.root])
 
-        print "Initial Proportion {:.2f}".format(proportion(targets))
-
+        # print "Initial Proportion {}".format(map(lambda p: int(100*p), proportion(targets)))
+        current_depth = 0
         while len(queue)>0:
             node = queue.popleft()
             node.make_split()
             split = node.split
-            print "Depth {},\tSplit ({:.2f}) {}:{} ({:.2f})".format(
-                node.depth, proportion(split.targets_left), len(split.targets_left),
-                len(split.targets_right), proportion(split.targets_right))
+            if node.depth>current_depth:
+                current_depth = node.depth
+                print "Depth {}".format(current_depth)
+            # print "Depth {},\tSplit ({}) {}:{} ({})".format(
+            #     node.depth,
+            #     map(lambda p: int(100*p), proportion(split.targets_left)), len(split.targets_left),
+            #     len(split.targets_right), map(lambda p: int(100*p), proportion(split.targets_right)))
 
             if node.depth < self.params.max_depth:
-                if len(split.targets_left) > self.params.min_size and self.params.min_proportion < proportion(split.targets_left) < 1-self.params.min_proportion:
+                if ~self.params.stop_when(split.targets_left):
                     node.left = _TreeNode(self.params, features, node.idxs[:, split.cond], split.targets_left, node.depth + 1)
                     queue.append(node.left)
-                if len(split.targets_right) > self.params.min_size and self.params.min_proportion  < proportion(split.targets_right) < 1-self.params.min_proportion:
+                if ~self.params.stop_when(split.targets_right):
                     node.right = _TreeNode(self.params, features, node.idxs[:, ~split.cond], split.targets_right, node.depth + 1)
                     queue.append(node.right)
 
     def predict(self, features, idxs):
         queue = deque([(self.root, np.arange(len(idxs[0])))])
-        pred = np.empty(len(idxs[0]))
+        pred = np.empty((len(idxs[0]), 3), 'd')
 
         while len(queue)>0:
             node, node_idxs_idxs = queue.popleft()
@@ -57,12 +61,12 @@ class Tree:
             right_idxs_idxs = node_idxs_idxs[~cond]
 
             if node.left is None:
-                pred[left_idxs_idxs] = node.split.proportion_left
+                pred[left_idxs_idxs, :] = node.split.proportion_left
             else:
                 queue.append((node.left, left_idxs_idxs))
 
             if node.right is None:
-                pred[right_idxs_idxs] = node.split.proportion_right
+                pred[right_idxs_idxs, :] = node.split.proportion_right
             else:
                 queue.append((node.right, right_idxs_idxs))
 
@@ -79,10 +83,8 @@ class _TreeNode:
         self.left, self.right = None, None
 
     def make_split(self):
-        t = time()
         split_features = [self.features[random.choice(self.features.keys())] for _ in range(self.params.n_node_features)]
         self.split = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
-        print time()-t
 
 def score_split(split):
     return -split.entropy
