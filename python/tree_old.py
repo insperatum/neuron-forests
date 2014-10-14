@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import util
+from util import *
 from memory_profiler import profile
 import pp
 
@@ -35,7 +35,7 @@ class Tree:
                 eRight = entropy(r)
                 e = (len(l) * eLeft + len(r) * eRight) / len(Y)
                 if (best is None or e < best.entropy):
-                    best = util.Split(
+                    best = Split(
                         entropy=e,
                         feature=f,
                         threshold=t,
@@ -85,12 +85,3 @@ class Tree:
             out[~a] = r
 
         return out
-
-
-def entropy(lst):
-    if lst.size == 0:
-        return 0
-    else:
-        p = np.bincount(lst) / float(lst.size)
-        vfunc = np.vectorize(lambda x: 0 if x == 0 else -x * np.log(x))
-        return np.sum(vfunc(p))

@@ -1,5 +1,5 @@
 import numpy as np
-from tree import Tree
+from tree_old import Tree
 import pp
 import time
 
