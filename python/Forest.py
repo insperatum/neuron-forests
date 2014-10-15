@@ -12,7 +12,7 @@ from util import *
 
 ForestParameters = namedtuple(
     'ForestParameters',
-    ['tree_params', 'n_trees', 'testing_par_trees', 'training_par_trees', 'save_path'])
+    ['tree_params', 'n_trees', 'testing_par_trees', 'training_par_trees', 'save_path', 'bag_proportion'])
 
 
 class Forest:
@@ -25,7 +25,10 @@ class Forest:
         start_time = time.time()
         self.tree_keys = maybe_par_map(
             train_tree,
-            [(i, self.params, features, idxs, targets) for i in range(self.params.n_trees)],
+            [(i, self.params, features,
+              idxs[:, np.random.permutation(idxs.shape[1])[:idxs.shape[1]*0.5]],
+              targets)
+             for i in range(self.params.n_trees)],
             self.params.training_par_trees)
         print("\nTraining complete. Forest took {} seconds".format(int(time.time() - start_time)))
         pickle.dump(self, open(self.params.save_path + "/Forest.pkl", "wb"), -1)

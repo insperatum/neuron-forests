@@ -11,6 +11,7 @@ class FeatureGenerator:
     def __init__(self, root, paths, max_offset):
         self.root = root
         self.paths = paths
+        self.size = len(self.paths)
         self.max_offset = max_offset
         self.cached = None
 

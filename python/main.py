@@ -25,6 +25,7 @@ sample = False
 params = ForestParameters(
     save_path=path,
     n_trees=8,
+    bag_proportion=0.5,
     training_par_trees=8,
     testing_par_trees=4,
     tree_params=TreeParameters(
