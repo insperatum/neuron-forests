@@ -6,6 +6,7 @@ from util import limit_memory
 limit_memory(7000)
 
 n = int(sys.argv[1])
+#n = 1000
 print "n={}".format(n)
 
 print "Loading Helmstaedter2013 data"
@@ -53,7 +54,8 @@ forest.train(features, idxs_train, targets_train)
 
 print "\n\nPredicting on remaining {} examples".format(idxs_test[0].size)
 pred = forest.predict(features, idxs_test)
-err = np.mean((pred - targets_test)^2)
+diff = pred - targets_test
+err = np.mean(diff * diff)
 print "Mean square error = {}".format(err)
 
 print "\n\nSaving results".format(targets_test.size)
