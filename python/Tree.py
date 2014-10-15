@@ -49,10 +49,10 @@ class Tree:
             split = node.split
 
             if node.depth < self.params.max_depth:
-                if ~stop_when(split.targets_left, self.params.min_size, self.params.min_proportion):
+                if not stop_when(split.targets_left, self.params.min_size, self.params.min_proportion):
                     node.left = _TreeNode(self.params, node.idxs[:, split.cond], split.targets_left, node.depth + 1)
                     queue.append(node.left)
-                if ~stop_when(split.targets_right, self.params.min_size, self.params.min_proportion):
+                if not stop_when(split.targets_right, self.params.min_size, self.params.min_proportion):
                     node.right = _TreeNode(self.params, node.idxs[:, ~split.cond], split.targets_right, node.depth + 1)
                     queue.append(node.right)
 
