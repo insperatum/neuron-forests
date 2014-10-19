@@ -38,14 +38,14 @@ class Tree:
                     print "Depth {} took {:.2f}s".format(current_depth, time.time() - start_time)
                     start_time = time.time()
                 current_depth = node.depth
-                feature_cache = features.subset(self.params.n_node_feature_bases)
+                # feature_cache = features.subset(self.params.n_node_feature_bases)
             # print "Depth {},\tSplit ({}) {}:{} ({})".format(
             #     node.depth,
             #     map(lambda p: int(100*p), proportion(split.targets_left)), len(split.targets_left),
             #     len(split.targets_right), map(lambda p: int(100*p), proportion(split.targets_right)))
 
 
-            node.make_split(feature_cache)
+            node.make_split(features)
             split = node.split
 
             if node.depth < self.params.max_depth:
@@ -94,7 +94,8 @@ class _TreeNode:
     def make_split(self, features):
         gen = features.subset(self.params.n_node_feature_bases)
         split_features = [gen.random() for _ in range(self.params.n_node_features_total)]
-        self.split = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
+        best = par_max_by(split_features, self.params.training_par_features, train_feature, (self.params, self.idxs, self.targets), score_split)
+        self.split = best
 
 def stop_when(output, min_size, min_proportion):
     return len(output) < min_size or all(map(lambda p: p<min_proportion or p>1-min_proportion, proportion(output)))

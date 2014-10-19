@@ -50,6 +50,12 @@ features = get_feature_generator("features/im1",
 forest = Forest(params)
 forest.train(features, idxs_train, targets_train)
 
+print "\n\nPredicting on same examples"
+pred = forest.predict(features, idxs_train)
+diff = pred - targets_train
+err = np.mean(diff * diff)
+print "Mean square error = {}".format(err)
+
 
 
 print "\n\nPredicting on remaining {} examples".format(idxs_test[0].size)

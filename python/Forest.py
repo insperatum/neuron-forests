@@ -23,11 +23,14 @@ class Forest:
 
     def train(self, features, idxs, targets):
         start_time = time.time()
+        bagged_idxs_idxs = [np.random.permutation(idxs.shape[1])[:idxs.shape[1]*self.params.bag_proportion]
+                            for _ in range(self.params.n_trees)]
+
         self.tree_keys = maybe_par_map(
             train_tree,
             [(i, self.params, features,
-              idxs[:, np.random.permutation(idxs.shape[1])[:idxs.shape[1]*0.5]],
-              targets)
+              idxs[:, bagged_idxs_idxs[i]],
+              targets[bagged_idxs_idxs[i]])
              for i in range(self.params.n_trees)],
             self.params.training_par_trees)
         print("\nTraining complete. Forest took {} seconds".format(int(time.time() - start_time)))
