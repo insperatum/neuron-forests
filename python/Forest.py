@@ -3,7 +3,9 @@ from collections import deque, namedtuple
 import time
 import cPickle as pickle
 import os
+import gc
 
+from memory_profiler import profile
 import numpy as np
 import random
 
@@ -12,7 +14,7 @@ from util import *
 
 ForestParameters = namedtuple(
     'ForestParameters',
-    ['tree_params', 'n_trees', 'testing_par_trees', 'training_par_trees', 'save_path', 'bag_proportion'])
+    ['tree_params', 'n_trees', 'testing_par_trees', 'training_par_trees', 'save_path', 'bag_proportion', 'preload_features'])
 
 
 class Forest:
@@ -21,7 +23,10 @@ class Forest:
         self.tree_keys = None
         if not os.path.exists(self.params.save_path): os.mkdir(self.params.save_path)
 
+    @profile
     def train(self, features, idxs, targets):
+        if self.params.preload_features:
+            features.cache()
         start_time = time.time()
         bagged_idxs_idxs = [np.random.permutation(idxs.shape[1])[:idxs.shape[1]*self.params.bag_proportion]
                             for _ in range(self.params.n_trees)]
@@ -44,6 +49,7 @@ class Forest:
             (features, idxs))
         return s / self.params.n_trees
 
+# @profile
 def train_tree(args):
     i, params, features, idxs, targets = args
     start_time = time.time()
@@ -53,6 +59,8 @@ def train_tree(args):
     print("Tree {} took {} seconds".format(i, int(time.time() - start_time)))
     file = params.save_path + "/Tree " + str(i) + ".pkl"
     pickle.dump(tree, open(file, "wb"), -1)
+    # tree = None
+    # gc.collect()
     return file
 
 def predict_tree(args, features, idxs):

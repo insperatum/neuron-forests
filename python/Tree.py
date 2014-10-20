@@ -10,13 +10,13 @@ from util import *
 TreeParameters = namedtuple(
     'TreeParameters',
     ['max_depth', 'min_size', 'min_proportion', 'n_node_feature_bases', 'n_node_features_total', 'n_node_thresholds',
-     'training_par_thresholds', 'training_par_features'])
+     'training_par_thresholds', 'training_par_features', 'preload_features'])
 Split = namedtuple(
     'Split',
     ['feature_key', 'threshold', 'entropy', 'cond', 'targets_left', 'targets_right', 'proportion_left', 'proportion_right'])
 
 
-feature_cache = None
+# feature_cache = None
 
 class Tree:
     def __init__(self, params):
@@ -25,6 +25,9 @@ class Tree:
 
     def train(self, features, idxs, targets):
         self.root = _TreeNode(self.params, idxs, targets)
+        if self.params.preload_features:
+            features.cache()
+
         queue = deque([self.root])
 
         # print "Initial Proportion {}".format(map(lambda p: int(100*p), proportion(targets)))

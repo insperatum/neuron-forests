@@ -3,7 +3,7 @@ import sys
 from Forest import *
 from Feature import *
 from util import limit_memory
-limit_memory(7000)
+limit_memory(6000)
 
 n = int(sys.argv[1])
 #n = 1000
@@ -27,30 +27,33 @@ idxs_test = idxs[:, perm[n+1:]]
 targets_train = targets[perm[:n]]
 targets_test = targets[perm[n+1:]]
 
-print "\n\nTraining on {} data examples".format(idxs_train[0].size)
+print "Creating Forest"
 path = "model/n_experiment_{}".format(n)
 params = ForestParameters(
     save_path=path,
-    n_trees=50,
+    n_trees=20,
     bag_proportion=0.5,
-    training_par_trees=8,
-    testing_par_trees=8,
+    training_par_trees=1,
+    testing_par_trees=1,
+    preload_features=True,
     tree_params=TreeParameters(
-        max_depth=6,
+        max_depth=3,
         min_size=100,
         min_proportion=0.01,
         n_node_feature_bases=5,
         n_node_features_total=30,
         n_node_thresholds=10,
         training_par_features=1,
-        training_par_thresholds=1))
+        training_par_thresholds=1,
+        preload_features=True))
 features = get_feature_generator("features/im1",
         max_offset=1)
 
 forest = Forest(params)
+print "\nTraining on {} data examples".format(idxs_train[0].size)
 forest.train(features, idxs_train, targets_train)
 
-print "\n\nPredicting on same examples"
+print "\nPredicting on same examples"
 pred = forest.predict(features, idxs_train)
 diff = pred - targets_train
 err = np.mean(diff * diff)

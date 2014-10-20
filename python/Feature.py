@@ -1,5 +1,7 @@
 import os
 import random
+import time
+from memory_profiler import profile
 
 from scipy import io
 import numpy as np
@@ -22,7 +24,7 @@ class FeatureGenerator:
 
     def gen_feature(self, path, offset):
         if self.cached is not None:
-            return Feature(self.cached(path), offset)
+            return Feature(self.cached[path], offset)
         else:
             return Feature(FeatureBase(self.root, path), offset)
 
@@ -38,11 +40,15 @@ class FeatureGenerator:
         gen.cached = self.cached
         return gen
 
+    @profile
     def cache(self):
         if self.cached is None:
+            start_time = time.time()
+            print "Preloading {} features".format(len(self.paths))
             self.cached = {}
             for p in self.paths:
                 self.cached.update({p:CachedFeatureBase(FeatureBase(self.root, p))})
+            print "Preloading complete (took {} seconds)".format(time.time() - start_time)
         return self
 
     def clear_cache(self):
@@ -59,7 +65,7 @@ class FeatureBase:
 
 class CachedFeatureBase(FeatureBase):
     def __init__(self, base):
-        FeatureBase.__init__(self, base.root, base.path, base.offset)
+        FeatureBase.__init__(self, base.root, base.path)
         self.mat = io.loadmat(self.root + "/" + self.path)
 
     def load_data(self):
