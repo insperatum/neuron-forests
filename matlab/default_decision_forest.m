@@ -1,7 +1,7 @@
 load('data/Helmstaedter2013/features/im1.mat')
 
-pTrain = 0.1; % fraction to use as training data
-pTest = 0.1; % fraction to use as test data
+pTrain = 0.2; % fraction to use as training data
+pTest = 0.8; % fraction to use as test data
 nTrees = 50;
 
 %%
@@ -42,8 +42,8 @@ tic
 toc
 
 splitscores = scores * [0 0 0; 0 0 1; 0 1 0; 0 1 1; 1 0 0; 1 0 1; 1 1 0; 1 1 1];
-err = sum(splitscores > 0.5 ~= YTest) / (size(splitscores, 1));
-disp('Error Rates:')
+err = mean((splitscores - YTest).^2)
+disp('Square Error:')
 fprintf('%.2f%%\n', err*100)
 
 %%
