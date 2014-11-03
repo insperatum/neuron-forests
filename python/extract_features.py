@@ -1,7 +1,9 @@
 import numpy as np
 from scipy import ndimage, misc, io
-from matplotlib import pyplot
 import os
+import sys
+
+data_file = sys.argv[1]
 
 # def getFiltered(img, scale):
 # conv = ndimage.filters.convolve
@@ -47,11 +49,13 @@ def makeFeatures(img, name):
             io.savemat(filename, {"im": feature, "scale": scale})
 
 
-cat = np.mean(ndimage.imread("data/cat.jpg"), axis=2)
-makeFeatures(cat, "cat")
-
 print "Loading Helmstaedter2013 data"
-Helmstaedter2013 = io.loadmat("data/Helmstaedter_etal_Nature_2013_e2006_TrainingData_all.mat")
+Helmstaedter2013 = io.loadmat(data_file)
+print "keys", Helmstaedter2013.keys()
+a = Helmstaedter2013["im"]
+print a.shape
+b = a[0, 1]
+print b.shape
 for i in range(0, 2):
     makeFeatures(Helmstaedter2013["im"][0, i], "im" + str(i + 1))
 

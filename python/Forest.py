@@ -1,11 +1,9 @@
-import multiprocessing as mp
 from collections import deque, namedtuple
 import time
 import cPickle as pickle
 import os
 import gc
 
-from memory_profiler import profile
 import numpy as np
 import random
 
@@ -23,7 +21,6 @@ class Forest:
         self.tree_keys = None
         if not os.path.exists(self.params.save_path): os.mkdir(self.params.save_path)
 
-    @profile
     def train(self, features, idxs, targets):
         if self.params.preload_features:
             features.cache()

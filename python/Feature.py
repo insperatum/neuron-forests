@@ -1,7 +1,6 @@
 import os
 import random
 import time
-from memory_profiler import profile
 
 from scipy import io
 import numpy as np
@@ -10,11 +9,11 @@ from util import *
 
 
 class FeatureGenerator:
-    def __init__(self, root, paths, max_offset):
+    def __init__(self, root, paths, offsets):
         self.root = root
         self.paths = paths
         self.size = len(self.paths)
-        self.max_offset = max_offset
+        self.offsets = offsets
         self.cached = None
 
 
@@ -28,19 +27,21 @@ class FeatureGenerator:
         else:
             return Feature(FeatureBase(self.root, path), offset)
 
+    def all(self):
+        return [self.gen_feature(path, o)
+                    for path in self.paths
+                    for o in self.offsets]
+
     def random(self):
         path = random.choice(self.paths)
-        o1 = random.randint(-self.max_offset, self.max_offset)
-        o2 = random.randint(-self.max_offset, self.max_offset)
-        o3 = random.randint(-self.max_offset, self.max_offset)
-        return self.gen_feature(path, (o1, o2, o3))
+        o = random.choice(self.offsets)
+        return self.gen_feature(path, o)
 
     def subset(self, n_features):
-        gen = FeatureGenerator(self.root, np.random.permutation(self.paths)[:n_features], self.max_offset)
+        gen = FeatureGenerator(self.root, np.random.permutation(self.paths)[:n_features], self.offsets)
         gen.cached = self.cached
         return gen
 
-    @profile
     def cache(self):
         if self.cached is None:
             start_time = time.time()
@@ -98,5 +99,5 @@ def _get_feature_paths(root, path=""):
             feature_paths = feature_paths + [path + f]
     return feature_paths
 
-def get_feature_generator(root, max_offset=None):
-    return FeatureGenerator(root, _get_feature_paths(root), max_offset)
+def get_feature_generator(root, offsets = [(0, 0, 0)]):
+    return FeatureGenerator(root, _get_feature_paths(root), offsets)

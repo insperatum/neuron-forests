@@ -1,0 +1,4 @@
+#!/bin/bash
+export LD_LIBRARY_PATH=/opt/MATLAB/R2014a/bin/glnxa64
+if [ $# -lt 2 ]; then export f=0.2; else export f=$2; fi
+python ~/neuron-forests/python/visualise_summary.py ~/neuron-forests/data/Helmstaedter_etal_Nature_2013_e2006_TrainingData_all.mat $1 "{'train_frac':$f}"
